@@ -62,7 +62,7 @@ Because every skill is written in clear, checklist-style Markdown, they double p
 The library is organized by domain, ensuring skills are easy to find and categorize.
 
 ```text
-skiLLM/
+skiLLM.d/
 ├── README.md                 # You are here
 ├── CONTRIBUTING.md           # Strict rules for adding new skills
 ├── registry.json             # Central index of all skills for programmatic discovery
