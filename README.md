@@ -1,6 +1,6 @@
 <div align="center">
 
-![Project Demo](assets/logo.gif)
+![Logo](ba.gif)
 
 **skiLL.Md is a structured, open-source collection of reusable, self-contained Markdown modules designed to teach AI coding assistants and human developers how to perform specific software engineering tasks.**
 
