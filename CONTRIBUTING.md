@@ -1,4 +1,4 @@
-# Contributing Guidelines
+<img height="648" alt="contri guide" src="https://github.com/user-attachments/assets/aced5641-2cc2-437d-82a7-193cf9b4916e" />
 
 To maintain the high quality and uniformity of this skills library, all contributions must adhere to the following strict rules:
 
