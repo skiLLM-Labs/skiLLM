@@ -1,4 +1,4 @@
-# Security Guidelines
+<img height="648" alt="sec guide" src="https://github.com/user-attachments/assets/406433bf-4466-40c6-8ca4-03c709195ce0" />
 
 skiLLM accepts only safe, transparent, auditable, and non-malicious skills.
 
