@@ -61,21 +61,7 @@ Because every skill is written in clear, checklist-style Markdown, they double p
 
 The library is organized by domain, ensuring skills are easy to find and categorize.
 
-```text
-skiLLM.d/
-├── README.md                 # You are here
-├── CONTRIBUTING.md           # Strict rules for adding new skills
-├── registry.json             # Central index of all skills for programmatic discovery
-├── schema/
-│   └── SKILL_SCHEMA.md       # The mandatory template for all SKILL.md files
-└── skills/                   # The core skill repository
-    ├── frontend/             # React, UI patterns, state management
-    ├── backend/              # API design, database, error handling
-    ├── dev-tools/            # Git workflows, CLI, debugging
-    ├── ui-ux/                # A11y, design systems, animation
-    ├── architecture/         # Caching, event-driven, scalability
-    └── code-quality/         # Testing, PR reviews, refactoring
-```
+<img height="856" alt="image" src="https://github.com/user-attachments/assets/0179d147-772f-4713-b863-a5d3f2c6899f" />
 
 ### The Power of `registry.json`
 The repository includes an auto-updated `registry.json`. This acts as an API for the filesystem. Tooling, CI/CD pipelines, and AI agents can parse this file to dynamically load skills by `category` or `tags` without needing to crawl directories.
