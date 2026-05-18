@@ -101,9 +101,9 @@ SUSPICIOUS_PATTERNS = [
     r"powershell.+iex",
     r"Invoke-Expression",
     r"base64\s+-d",
-    r"eval\(",
-    r"exec\(",
-    r"os\.system\(",
+    r"eval\s*[(]",
+    r"exec\s*[(]",
+    r"os\.system\s*[(]",
     r"subprocess\.",
     r"chmod\s+777",
 ]
