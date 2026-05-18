@@ -98,13 +98,17 @@ API_KEY_PATTERNS = [
     r"xox[baprs]-[A-Za-z0-9-]+",
 ]
 
-# Cleaned up to only look for genuinely malicious/suspicious shell links and commands
+# Robust security pattern tracking
 SUSPICIOUS_PATTERNS = [
     r"curl.+\|.+bash",
     r"wget.+\|.+sh",
+    r"curl\s+.*http.*\.sh",       # Catches standalone curl downloads targeting scripts
+    r"wget\s+.*http.*\.sh",       # Catches standalone wget downloads targeting scripts
+    r"curl\s+.*http.*\.exe",      # Catches downloads targeting executable bin scripts
     r"powershell.+iex",
     r"Invoke-Expression",
     r"base64\s+-d",
+    r"sh\s+-c\s+.*http",          # Remote shell command executions
 ]
 
 OBFUSCATION_PATTERNS = [
@@ -115,7 +119,7 @@ OBFUSCATION_PATTERNS = [
 
 REQUIRED_PR_CHECKBOXES = [
     "I have read and accepted the DISCLAIMER and CONTRIBUTING GUIDELINES",
-    "I am making changes that are actually useful and that they do not violate the SECURITY GUIDELINES" # Fixed typo "chages" -> "changes"
+    "I am making chages that are actually useful and that they do not violate the SECURITY GUIDELINES"
 ]
 
 errors = []
@@ -131,7 +135,6 @@ def warn(message):
 
 
 def get_pr_changed_files():
-    """Fetch the list of files modified in this Pull Request."""
     if not all([GITHUB_TOKEN, PR_NUMBER, REPO_NAME]):
         return []
 
@@ -167,27 +170,42 @@ def validate_pr_template():
     data = response.json()
     body = data.get("body", "") or ""
 
-    if len(body.strip()) < 200:
-        fail("PR description is too short")
+    # Fix: Strip all HTML comment blocks before evaluating user input length
+    clean_body = re.sub(r"", "", body, flags=re.DOTALL).strip()
 
+    if len(clean_body) < 50:
+        fail("PR description content is completely empty or too short. Please fill out the template.")
+        return
+
+    # Enforce strict checkbox completion
     for checkbox in REQUIRED_PR_CHECKBOXES:
-        # Create a flexible regex pattern to allow minor spacing variations in checkboxes
         cleaned_checkbox = re.escape(checkbox).replace(r"\ ", r"\s+")
         pattern = rf"- \[[xX]\]\s+{cleaned_checkbox}"
 
         if not re.search(pattern, body, re.IGNORECASE):
             fail(f"Required PR checkbox missing or unchecked: {checkbox}")
 
-    required_sections = [
-        "## Summary",
-        "## Type of Change",
-        "## What Changed",
-        "## Validation"
-    ]
+    # Section-specific empty verification rules
+    pr_sections = {
+        "## Summary": r"## Summary\s*(?:\n\s*)?\s*(.*?)(?=\n##|$)",
+        "## Type of Change": r"## Type of Change\s*(?:\n\s*)?\s*(.*?)(?=\n##|$)",
+        "## What Changed": r"## What Changed\s*(?:\n\s*)?\s*(.*?)(?=\n##|$)"
+    }
 
-    for section in required_sections:
-        if section not in body:
-            fail(f"Missing PR section: {section}")
+    for section_name, regex_pattern in pr_sections.items():
+        if section_name not in body:
+            fail(f"Missing required PR section: {section_name}")
+            continue
+
+        match = re.search(regex_pattern, body, re.DOTALL)
+        if match:
+            section_content = match.group(1).strip()
+            # Filter comments out of this section's content
+            section_content = re.sub(r"", "", section_content, flags=re.DOTALL).strip()
+            
+            # Check if user left default unchecked items or completely ignored text blocks
+            if not section_content or section_content == "- [ ]" or len(section_content) < 5:
+                fail(f"The PR section '{section_name}' has been left blank. Please provide actual details.")
 
 
 def validate_frontmatter(metadata, path):
@@ -204,7 +222,7 @@ def validate_frontmatter(metadata, path):
         fail(f"{path}: Invalid semver version")
 
     description = metadata.get("description", "")
-    if len(str(description)) > 140:  # Relaxed description size limit slightly
+    if len(str(description)) > 140:
         fail(f"{path}: Description exceeds 140 characters")
 
     category = metadata.get("category")
@@ -246,7 +264,7 @@ def scan_api_keys(content, path):
 def scan_suspicious_commands(content, path):
     for pattern in SUSPICIOUS_PATTERNS:
         if re.search(pattern, content, re.IGNORECASE):
-            fail(f"{path}: Suspicious command or connection string detected")
+            fail(f"{path}: Suspicious connection command string detected")
 
 
 def scan_obfuscation(content, path):
@@ -269,7 +287,7 @@ def detect_duplicates(skill_texts):
     for i in range(len(names)):
         for j in range(i + 1, len(names)):
             score = similarity[i][j]
-            if score > 0.95:  # Slightly bumped threshold to avoid false duplicates
+            if score > 0.95:
                 fail(f"Duplicate skill detected between '{names[i]}' and '{names[j]}' (similarity {score:.2f})")
 
 
@@ -310,7 +328,6 @@ def validate_skill_file(path):
     scan_suspicious_commands(raw, path)
     scan_obfuscation(raw, path)
 
-    # Relaxed string matching: Allows normal header text instead of strict bold emojis
     has_anti = "**❌ Anti-pattern:**" in raw or "Anti-pattern" in raw or "### Anti-pattern" in raw
     has_correct = "**✅ Correct pattern:**" in raw or "Correct pattern" in raw or "### Correct pattern" in raw
 
@@ -329,12 +346,8 @@ def main():
     changed_files = get_pr_changed_files()
     skill_texts = {}
 
-    # Gather baseline skills for global duplicate checks
     for skill_file in SKILLS_DIR.rglob("SKILL.md"):
         relative_path = str(skill_file)
-        
-        # Core Rule: Only validate files that are actively being modified in the current PR
-        # If the file isn't in changed_files, we skip detailed validation errors for it!
         is_changed_in_pr = any(relative_path.endswith(f) or f.endswith(relative_path) for f in changed_files)
         
         if is_changed_in_pr or not changed_files:
@@ -342,7 +355,6 @@ def main():
             if content:
                 skill_texts[relative_path] = content
         else:
-            # Just read contents silently for the duplicate comparison engine
             try:
                 raw = skill_file.read_text(encoding="utf-8")
                 post = parse_frontmatter(raw)
