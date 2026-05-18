@@ -1,12 +1,9 @@
 import os
 import re
 import sys
-import json
-import base64
 import frontmatter
 import requests
 from pathlib import Path
-from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -99,26 +96,26 @@ API_KEY_PATTERNS = [
 ]
 
 SUSPICIOUS_PATTERNS = [
-    r"curl.+\\|.+bash",
-    r"wget.+\\|.+sh",
+    r"curl.+\|.+bash",
+    r"wget.+\|.+sh",
     r"powershell.+iex",
     r"Invoke-Expression",
-    r"base64\\s+-d",
-    r"eval\\(",
-    r"exec\\(",
-    r"os\\.system\\(",
-    r"subprocess\\.",
-    r"chmod\\s+777",
+    r"base64\s+-d",
+    r"eval\(",
+    r"exec\(",
+    r"os\.system\(",
+    r"subprocess\.",
+    r"chmod\s+777",
 ]
 
 OBFUSCATION_PATTERNS = [
     r"[A-Za-z0-9+/]{200,}={0,2}",
     r"fromcharcode",
-    r"atob\\(",
-    r"btoa\\(",
-    r"marshal\\.loads",
-    r"zlib\\.decompress",
-    r"exec\\(base64",
+    r"atob\(",
+    r"btoa\(",
+    r"marshal\.loads",
+    r"zlib\.decompress",
+    r"exec\(base64",
 ]
 
 REQUIRED_PR_CHECKBOXES = [
@@ -194,7 +191,7 @@ def validate_frontmatter(metadata, path):
 
     version = metadata.get("version", "")
 
-    if not re.fullmatch(r"\\d+\\.\\d+\\.\\d+", str(version)):
+    if not re.fullmatch(r"\d+\.\d+\.\d+", str(version)):
         fail(f"{path}: Invalid semver version")
 
     description = metadata.get("description", "")
@@ -202,8 +199,8 @@ def validate_frontmatter(metadata, path):
     if len(description) > 100:
         fail(f"{path}: Description exceeds 100 characters")
 
-    if description.count(".") > 1:
-        fail(f"{path}: Description must be a single sentence")
+    if not description.endswith("."):
+        fail(f"{path}: Description must end with a period")
 
     category = metadata.get("category")
 
