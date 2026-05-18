@@ -265,9 +265,12 @@ def scan_api_keys(content, path):
 
 def scan_suspicious_commands(content, path):
     for pattern in SUSPICIOUS_PATTERNS:
-        if re.search(pattern, content, re.IGNORECASE):
-            fail(f"{path}: Suspicious command detected")
-
+        try:
+            if re.search(pattern, content, re.IGNORECASE):
+                fail(f"{path}: Suspicious command detected")
+        except Exception as e:
+            print(f"CRITICAL DEBUG: Failed evaluating pattern '{pattern}' on file '{path}'")
+            raise e
 
 
 def scan_obfuscation(content, path):
