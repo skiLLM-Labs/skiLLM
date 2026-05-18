@@ -2,25 +2,37 @@ name: Validate Skills
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, edited]
     paths:
       - "skills/**"
       - ".github/pull_request_template.md"
+      - "scripts/**"
 
 jobs:
   validate:
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    permissions:
+      pull-requests: read
+      contents: read
 
-      - uses: actions/setup-python@v5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          pip install pyyaml python-frontmatter markdown-it-py
+          pip install pyyaml python-frontmatter requests scikit-learn
 
-      - name: Run validator
+      - name: Run Validation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_NAME: ${{ github.repository }}
         run: |
           python scripts/validate_skills.py
