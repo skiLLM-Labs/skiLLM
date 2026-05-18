@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Force GitHub to use the exact code you just committed and pushed
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
